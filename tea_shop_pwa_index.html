@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#5c3d1e">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Maison du Thé">
+<meta name="description" content="Gestion de collection de thés — arômes, allergènes, stocks, timer d'infusion">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icons/icon-152x152.png">
+<link rel="icon" type="image/png" href="icons/favicon.png">
+<title>La Maison du Thé</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --tea:#5c3d1e;--tea-h:#3d2710;--tea-l:#f5ede3;--tea-m:#c4956a;
+  --cream:#faf7f2;--ink:#1a1208;--muted:#7a6a55;--border:#e8ddd0;
+  --green:#2d6a4f;--green-l:#d8f3dc;--green-b:#6fcf97;
+  --red:#991b1b;--red-l:#fef2f2;--red-b:#fca5a5;
+  --warn:#92400e;--warn-l:#fff8ed;--warn-b:#fcd34d;
+  --yellow:#854d0e;--yellow-l:#fefce8;--yellow-b:#fde047;
+  --blue:#185fa5;--blue-l:#e8f0fb;--blue-b:#93bce8;
+  --r:12px;--r-sm:7px;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+html,body{height:100%;overflow:hidden}
+body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);display:flex;flex-direction:column}
+
+/* ── APP SHELL ── */
+#shell{display:flex;flex-direction:column;height:100%;padding-top:var(--safe-top)}
+
+/* ── TOP BAR ── */
+.topbar{background:var(--tea);color:#fff;padding:.75rem 1rem .7rem;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;box-shadow:0 2px 8px rgba(92,61,30,.25)}
+.topbar-left{display:flex;flex-direction:column}
+.topbar-logo{font-size:10px;letter-spacing:.2em;text-transform:uppercase;opacity:.7;margin-bottom:.1rem}
+.topbar-title{font-family:'Playfair Display',serif;font-size:1.2rem;font-weight:400;font-style:italic;line-height:1}
+.topbar-right{display:flex;gap:.4rem;align-items:center}
+.icon-btn{background:rgba(255,255,255,.15);border:none;width:36px;height:36px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px;transition:background .15s;flex-shrink:0}
+.icon-btn:hover{background:rgba(255,255,255,.25)}
+.icon-btn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.8;pointer-events:none}
+
+/* ── SEARCH BAR ── */
+.searchbar{background:#fff;border-bottom:1px solid var(--border);padding:.5rem .85rem;display:flex;gap:.5rem;align-items:center;flex-shrink:0}
+.search-wrap{flex:1;position:relative}
+.search-wrap input{width:100%;border:1px solid var(--border);border-radius:20px;padding:.38rem .8rem .38rem 1.8rem;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);background:var(--cream);outline:none;transition:border-color .15s}
+.search-wrap input:focus{border-color:var(--tea-m);background:#fff}
+.search-icon{position:absolute;left:.6rem;top:50%;transform:translateY(-50%);width:12px;height:12px;opacity:.35;pointer-events:none;fill:none;stroke:currentColor;stroke-width:1.5}
+.sort-sel{border:1px solid var(--border);border-radius:20px;padding:.35rem .6rem;font-family:'DM Sans',sans-serif;font-size:11px;color:var(--muted);background:var(--cream);outline:none;cursor:pointer;max-width:120px}
+
+/* ── SCROLL AREA ── */
+#scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:.85rem .85rem calc(5rem + var(--safe-bot))}
+
+/* ── FILTER CHIPS ── */
+.chip-row{display:flex;gap:.35rem;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:.5rem;margin-bottom:.75rem;scrollbar-width:none}
+.chip-row::-webkit-scrollbar{display:none}
+.chip{background:#fff;border:1px solid var(--border);border-radius:20px;padding:.22rem .7rem;font-size:11.5px;color:var(--muted);cursor:pointer;white-space:nowrap;transition:all .15s;flex-shrink:0}
+.chip.active{background:var(--tea);border-color:var(--tea);color:#fff}
+.chip:hover:not(.active){border-color:var(--tea-m);color:var(--tea)}
+
+/* ── STATS ROW ── */
+.stats-row{display:flex;gap:.5rem;overflow-x:auto;margin-bottom:.85rem;scrollbar-width:none;padding-bottom:2px}
+.stats-row::-webkit-scrollbar{display:none}
+.stat-pill{background:#fff;border:1px solid var(--border);border-radius:8px;padding:.35rem .65rem;font-size:11px;color:var(--muted);white-space:nowrap;flex-shrink:0;text-align:center}
+.stat-pill strong{display:block;font-size:15px;font-weight:500;color:var(--ink);line-height:1.2}
+
+/* ── FILTER PANEL (slide-up) ── */
+.filter-panel-backdrop{position:fixed;inset:0;background:rgba(26,18,8,.35);z-index:40;display:none}
+.filter-panel-backdrop.open{display:block}
+.filter-panel{position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:18px 18px 0 0;z-index:41;padding:1rem 1rem calc(1.5rem + var(--safe-bot));max-height:80vh;overflow-y:auto;transform:translateY(100%);transition:transform .25s cubic-bezier(.22,1,.36,1)}
+.filter-panel.open{transform:translateY(0)}
+.filter-panel-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto .85rem;display:block}
+.filter-panel-title{font-size:13px;font-weight:500;margin-bottom:.75rem;color:var(--ink)}
+.filter-section-lbl{font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:.4rem;margin-top:.65rem}
+.filter-section-lbl:first-of-type{margin-top:0}
+.ftoggle-row{display:flex;flex-wrap:wrap;gap:.35rem}
+.ftoggle{display:inline-flex;align-items:center;gap:.3rem;background:var(--cream);border:1px solid var(--border);border-radius:20px;padding:.25rem .7rem;font-size:12px;cursor:pointer;transition:all .15s;user-select:none;color:var(--ink)}
+.ftoggle .dot{width:6px;height:6px;border-radius:50%;background:var(--border);flex-shrink:0}
+.ftoggle.a-red{background:var(--red-l);border-color:var(--red-b);color:var(--red)}
+.ftoggle.a-red .dot{background:var(--red)}
+.ftoggle.a-blue{background:var(--blue-l);border-color:var(--blue-b);color:var(--blue)}
+.ftoggle.a-blue .dot{background:var(--blue)}
+.filter-reset-btn{width:100%;margin-top:.85rem;background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:.5rem;font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;color:var(--muted)}
+
+/* ── CARDS ── */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:.7rem}
+@media(min-width:500px){.grid{grid-template-columns:repeat(3,1fr)}}
+@media(min-width:700px){.grid{grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}}
+
+.card{background:#fff;border:1px solid var(--border);border-radius:var(--r);overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s;position:relative;-webkit-user-select:none;user-select:none}
+.card:active{transform:scale(.97)}
+.card.alert-card{border-color:var(--red-b)}
+.card.new-card{animation:cardIn .3s cubic-bezier(.22,1,.36,1)}
+@keyframes cardIn{from{opacity:0;transform:scale(.9) translateY(10px)}to{opacity:1;transform:none}}
+.card-stripe{height:4px}
+.card-body{padding:.75rem .8rem}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.25rem;gap:.3rem}
+.card-type{font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);flex-shrink:0}
+.card-badges{display:flex;gap:.2rem;flex-wrap:wrap;justify-content:flex-end}
+.badge{font-size:9.5px;border-radius:8px;padding:.08rem .38rem;border:1px solid transparent;white-space:nowrap;font-weight:500;display:inline-flex;align-items:center;gap:.18rem}
+.badge-alert{background:var(--red-l);color:var(--red);border-color:var(--red-b)}
+.badge-safe{background:var(--green-l);color:var(--green);border-color:var(--green-b)}
+.badge-brand{background:var(--blue-l);color:var(--blue);border-color:var(--blue-b)}
+.badge-stock-ok{background:var(--green-l);color:var(--green);border-color:var(--green-b)}
+.badge-stock-low{background:var(--yellow-l);color:var(--yellow);border-color:var(--yellow-b)}
+.badge-stock-out{background:var(--red-l);color:var(--red);border-color:var(--red-b)}
+.badge-dot{width:5px;height:5px;border-radius:50%;display:inline-block;flex-shrink:0}
+.dot-ok{background:var(--green)}.dot-low{background:var(--yellow)}.dot-out{background:var(--red)}
+.card-name{font-family:'Playfair Display',serif;font-size:.9rem;font-weight:400;font-style:italic;margin-bottom:.4rem;color:var(--ink);line-height:1.3}
+.aromes{display:flex;flex-wrap:wrap;gap:.2rem;margin-bottom:.5rem}
+.arome-tag{font-size:10px;background:var(--tea-l);color:var(--tea);padding:.1rem .4rem;border-radius:8px}
+.card-stock-row{display:flex;gap:.2rem;flex-wrap:wrap;margin-top:.35rem;padding-top:.35rem;border-top:1px solid var(--border)}
+.card-meta{display:flex;justify-content:space-between;align-items:flex-end;padding-top:.5rem;border-top:1px solid var(--border)}
+.meta-val{font-size:12px;font-weight:500;color:var(--ink)}
+.meta-lbl{font-size:9px;color:var(--muted);margin-bottom:1px;letter-spacing:.07em;text-transform:uppercase}
+.card-temp-lbl{font-size:10px;color:var(--muted);margin-top:1px}
+
+/* ── EMPTY ── */
+.empty{text-align:center;padding:3rem 1rem;color:var(--muted)}
+.empty-icon{font-size:2rem;margin-bottom:.6rem;opacity:.35}
+
+/* ── FAB (Floating Action Button) ── */
+.fab{position:fixed;right:1.1rem;bottom:calc(1.1rem + var(--safe-bot));width:54px;height:54px;border-radius:50%;background:var(--tea);color:#fff;border:none;font-size:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(92,61,30,.35);z-index:30;transition:transform .15s,background .15s}
+.fab:active{transform:scale(.92)}
+.fab:hover{background:var(--tea-h)}
+
+/* ── PANEL (detail slide-up) ── */
+.panel-backdrop{position:fixed;inset:0;background:rgba(26,18,8,.4);z-index:50;display:none}
+.panel-backdrop.open{display:block}
+.panel{position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;z-index:51;max-height:92vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .25s cubic-bezier(.22,1,.36,1)}
+.panel.open{transform:translateY(0)}
+.panel-handle-bar{padding:.75rem 1rem .3rem;flex-shrink:0;cursor:pointer}
+.panel-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto}
+.panel-header{padding:.2rem 1rem .75rem;flex-shrink:0;border-bottom:1px solid var(--border)}
+.panel-type{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:.2rem}
+.panel-name{font-family:'Playfair Display',serif;font-size:1.25rem;font-weight:400;font-style:italic;line-height:1.3;margin-bottom:.4rem}
+.panel-badges-row{display:flex;flex-wrap:wrap;gap:.25rem}
+.panel-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:.85rem 1rem calc(1.5rem + var(--safe-bot))}
+.panel-sec{margin-bottom:.9rem}
+.panel-sec-title{font-size:10px;font-weight:500;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);margin-bottom:.35rem;padding-bottom:.25rem;border-bottom:1px solid var(--border)}
+.panel-tags{display:flex;flex-wrap:wrap;gap:.25rem}
+.ptag{font-size:12px;padding:.18rem .55rem;border-radius:9px}
+.ptag-arome{background:var(--tea-l);color:var(--tea)}
+.ptag-ing{background:#f5f5f5;color:#555;border:1px solid #e5e5e5}
+.ptag-ing.allerg{background:var(--warn-l);color:var(--warn);border-color:var(--warn-b)}
+.ptag-allergen{background:var(--warn-l);color:var(--warn);border:1px solid var(--warn-b)}
+.allergy-warn{background:var(--red-l);border:1px solid var(--red-b);border-radius:7px;padding:.45rem .7rem;font-size:12px;color:var(--red);margin-bottom:.75rem;display:flex;gap:.35rem}
+.allergy-note-box{font-size:12px;color:var(--warn);background:var(--warn-l);border:1px solid var(--warn-b);border-radius:6px;padding:.35rem .6rem;margin-bottom:.75rem}
+.panel-meta-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.pmc{background:var(--cream);border:1px solid var(--border);border-radius:7px;padding:.5rem .65rem;text-align:center}
+.pmc .lbl{font-size:9.5px;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.15rem}
+.pmc .val{font-size:14px;font-weight:500}
+
+/* STOCK cards in panel */
+.stock-panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.stock-card{border-radius:8px;padding:.65rem .75rem;border:1px solid var(--border)}
+.stock-card.ok{background:var(--green-l);border-color:var(--green-b)}
+.stock-card.low{background:var(--yellow-l);border-color:var(--yellow-b)}
+.stock-card.out{background:var(--red-l);border-color:var(--red-b)}
+.sc-icon{font-size:16px;margin-bottom:.25rem}
+.sc-type{font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:500;margin-bottom:.15rem}
+.stock-card.ok .sc-type{color:var(--green)}.stock-card.low .sc-type{color:var(--yellow)}.stock-card.out .sc-type{color:var(--red)}
+.sc-qty{font-size:15px;font-weight:500;color:var(--ink)}
+.sc-status{font-size:11px;margin-top:.1rem}
+.stock-card.ok .sc-status{color:var(--green)}.stock-card.low .sc-status{color:var(--yellow)}.stock-card.out .sc-status{color:var(--red)}
+
+/* TEMP control */
+.temp-ctrl{display:flex;align-items:center;gap:.5rem;padding:.5rem .65rem;background:#fff;border:1px solid var(--border);border-radius:7px;margin-top:.5rem}
+.temp-ctrl-label{font-size:12px;color:var(--muted);flex:1}
+.temp-ctrl-btn{width:32px;height:32px;border:1px solid var(--border);border-radius:7px;background:var(--cream);cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;color:var(--ink);transition:all .12s;line-height:1;flex-shrink:0;font-family:'DM Sans',sans-serif}
+.temp-ctrl-btn:active{background:var(--tea-l);border-color:var(--tea-m);transform:scale(.93)}
+.temp-ctrl-val{font-size:16px;font-weight:500;min-width:58px;text-align:center}
+.temp-hint{font-size:11px;color:var(--muted);text-align:center;margin-top:.3rem}
+
+/* TIMER */
+.timer-box{background:var(--tea-l);border:1px solid #dcc9b4;border-radius:var(--r-sm);padding:.8rem .9rem;margin-top:.4rem}
+.timer-slider-row{display:flex;align-items:center;gap:.4rem;margin-bottom:.5rem}
+.timer-slider-row span{font-size:11px;color:var(--muted);white-space:nowrap}
+.timer-slider-row input[type=range]{flex:1;accent-color:var(--tea);cursor:pointer;height:28px}
+.timer-slider-row output{font-size:12px;font-weight:500;min-width:38px;text-align:right}
+.timer-display{text-align:center;font-size:2.2rem;font-weight:500;letter-spacing:.04em;color:var(--tea);margin:.25rem 0}
+.timer-bar-wrap{height:6px;background:rgba(92,61,30,.15);border-radius:3px;margin-bottom:.55rem;overflow:hidden}
+.timer-bar{height:100%;background:var(--tea-m);border-radius:3px;transition:width .8s linear;width:0}
+.timer-btns{display:flex;gap:.4rem}
+.timer-btn{flex:1;border:1px solid var(--border);background:#fff;border-radius:8px;padding:.4rem 0;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;transition:all .12s;color:var(--ink)}
+.timer-btn:active{transform:scale(.95)}
+.timer-btn.start{background:var(--tea);color:#fff;border-color:var(--tea)}
+.timer-btn.pause{background:var(--warn);color:#fff;border-color:var(--warn)}
+.timer-done{text-align:center;font-size:13px;color:var(--green);font-weight:500;margin-top:.4rem;display:none;padding:.3rem;background:var(--green-l);border-radius:5px}
+
+/* PANEL ACTION BUTTONS */
+.panel-actions{display:flex;gap:.5rem;padding:.75rem 1rem;border-top:1px solid var(--border);flex-shrink:0;background:#fff}
+.panel-act-btn{flex:1;border:1px solid var(--border);background:#fff;border-radius:8px;padding:.5rem;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;transition:all .12s;color:var(--ink);display:flex;align-items:center;justify-content:center;gap:.35rem}
+.panel-act-btn svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.5;flex-shrink:0}
+.panel-act-btn:active{transform:scale(.96)}
+.panel-act-btn.edit{border-color:var(--tea-m);color:var(--tea)}
+.panel-act-btn.edit:active{background:var(--tea-l)}
+.panel-act-btn.del{border-color:var(--red-b);color:var(--red)}
+.panel-act-btn.del:active{background:var(--red-l)}
+
+/* ── MODAL (bottom sheet) ── */
+.modal-backdrop{position:fixed;inset:0;background:rgba(26,18,8,.45);z-index:60;display:none}
+.modal-backdrop.open{display:block}
+.modal{position:fixed;bottom:0;left:0;right:0;background:#fff;border-radius:20px 20px 0 0;z-index:61;max-height:94vh;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .25s cubic-bezier(.22,1,.36,1)}
+.modal.open{transform:translateY(0)}
+.modal-handle-bar{padding:.75rem 1rem .3rem;flex-shrink:0}
+.modal-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto}
+.modal-hdr{display:flex;justify-content:space-between;align-items:center;padding:.2rem 1rem .65rem;flex-shrink:0;border-bottom:1px solid var(--border)}
+.modal-hdr h2{font-family:'Playfair Display',serif;font-size:1.1rem;font-weight:400;font-style:italic}
+.modal-x{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);line-height:1;padding:.2rem;width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:6px}
+.modal-x:active{background:var(--red-l);color:var(--red)}
+.modal-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:.9rem 1rem calc(1.5rem + var(--safe-bot))}
+.form-row{margin-bottom:.8rem}
+.form-row label{display:block;font-size:11px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin-bottom:.28rem}
+.form-row input,.form-row select,.form-row textarea{width:100%;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:.55rem .75rem;font-family:'DM Sans',sans-serif;font-size:15px;color:var(--ink);background:#fff;outline:none;transition:border-color .15s;resize:none;appearance:none;-webkit-appearance:none}
+.form-row input:focus,.form-row select:focus,.form-row textarea:focus{border-color:var(--tea-m)}
+.form-row input.error{border-color:var(--red)}
+.form-row small{font-size:11px;color:var(--muted);margin-top:.2rem;display:block}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:.55rem}
+.sec-sep{font-size:11px;font-weight:500;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:1rem 0 .6rem;padding-top:.85rem;border-top:1px solid var(--border)}
+.temp-row{display:flex;align-items:center;gap:.5rem}
+.temp-row input{flex:1}
+.temp-row span{font-size:12px;color:var(--muted);white-space:nowrap}
+.preset-btns{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.4rem}
+.preset-btn{background:var(--cream);border:1px solid var(--border);border-radius:6px;padding:.25rem .55rem;font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;color:var(--muted);transition:all .12s}
+.preset-btn.active{background:var(--tea-l);border-color:var(--tea-m);color:var(--tea)}
+.brand-wrap{position:relative}
+.brand-drop{position:absolute;bottom:calc(100% + 3px);left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:var(--r-sm);z-index:10;box-shadow:0 -4px 16px rgba(92,61,30,.1);display:none;max-height:160px;overflow-y:auto}
+.brand-drop.open{display:block}
+.brand-opt{padding:.5rem .75rem;font-size:14px;cursor:pointer;color:var(--ink)}
+.brand-opt:active{background:var(--tea-l)}
+
+/* STOCK in modal */
+.stock-section{background:var(--cream);border:1px solid var(--border);border-radius:8px;padding:.7rem .85rem;margin-top:.25rem}
+.stock-section-title{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:.55rem;font-weight:500}
+.stock-row{display:flex;align-items:center;gap:.5rem;margin-bottom:.45rem}
+.stock-row:last-child{margin-bottom:0}
+.stock-row label{font-size:13px;color:var(--ink);min-width:62px;font-weight:400;text-transform:none;letter-spacing:0}
+.stock-row input{width:90px;border:1.5px solid var(--border);border-radius:var(--r-sm);padding:.4rem .6rem;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink);background:#fff;outline:none}
+.stock-row input:focus{border-color:var(--tea-m)}
+.stock-row span.unit{font-size:12px;color:var(--muted)}
+.si{display:inline-flex;align-items:center;gap:.25rem;font-size:11px;font-weight:500;padding:.12rem .45rem;border-radius:8px;margin-left:.2rem}
+.si.ok{background:var(--green-l);color:var(--green);border:1px solid var(--green-b)}
+.si.low{background:var(--yellow-l);color:var(--yellow);border:1px solid var(--yellow-b)}
+.si.out{background:var(--red-l);color:var(--red);border:1px solid var(--red-b)}
+.si.none{display:none}
+
+.allergen-grid{display:flex;flex-wrap:wrap;gap:.3rem;margin-top:.3rem}
+.achk{display:flex;align-items:center;gap:.3rem;background:var(--cream);border:1px solid var(--border);border-radius:6px;padding:.3rem .65rem;font-size:12px;cursor:pointer;user-select:none;transition:all .12s}
+.achk.on{background:var(--warn-l);border-color:var(--warn-b);color:var(--warn)}
+.achk input{cursor:pointer;accent-color:#92400e;width:14px;height:14px;flex-shrink:0}
+.color-picker{display:flex;flex-wrap:wrap;gap:.45rem;margin-top:.35rem}
+.color-dot{width:26px;height:26px;border-radius:50%;border:2.5px solid transparent;cursor:pointer;transition:transform .12s}
+.color-dot.sel{border-color:var(--ink);transform:scale(1.15)}
+.modal-foot{display:flex;gap:.5rem;padding:.85rem 1rem;border-top:1px solid var(--border);flex-shrink:0;background:#fff}
+.btn-cancel{flex:1;background:none;border:1.5px solid var(--border);border-radius:10px;padding:.55rem;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;color:var(--muted)}
+.btn-save{flex:2;background:var(--tea);color:#fff;border:none;border-radius:10px;padding:.55rem;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:500;cursor:pointer}
+.btn-save:active{background:var(--tea-h)}
+
+/* ── CONFIRM DIALOG ── */
+.confirm-backdrop{position:fixed;inset:0;background:rgba(26,18,8,.45);z-index:70;display:none;align-items:flex-end;justify-content:center;padding-bottom:var(--safe-bot)}
+.confirm-backdrop.open{display:flex}
+.confirm-box{background:#fff;border-radius:16px 16px 0 0;padding:1.25rem 1rem calc(1.25rem + var(--safe-bot));width:100%;max-width:500px;text-align:center}
+.confirm-box h3{font-size:15px;font-weight:500;margin-bottom:.35rem}
+.confirm-box p{font-size:13px;color:var(--muted);margin-bottom:1rem;line-height:1.5}
+.confirm-btns{display:flex;gap:.5rem}
+.btn-del{flex:1;background:var(--red);color:#fff;border:none;border-radius:10px;padding:.55rem;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer}
+.btn-no{flex:1;background:none;border:1.5px solid var(--border);border-radius:10px;padding:.55rem;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;color:var(--muted)}
+
+/* ── IMPORT/EXPORT SHEET ── */
+.io-backdrop{position:fixed;inset:0;background:rgba(26,18,8,.45);z-index:80;display:none;align-items:flex-end}
+.io-backdrop.open{display:flex}
+.io-sheet{background:#fff;border-radius:20px 20px 0 0;padding:1rem 1rem calc(1.5rem + var(--safe-bot));width:100%;max-width:500px;margin:0 auto}
+.io-handle{width:36px;height:4px;background:var(--border);border-radius:2px;margin:0 auto .85rem}
+.io-title{font-size:14px;font-weight:500;margin-bottom:.85rem;color:var(--ink);text-align:center}
+.io-btn{display:flex;align-items:center;gap:.75rem;width:100%;background:var(--cream);border:1.5px solid var(--border);border-radius:10px;padding:.75rem;margin-bottom:.5rem;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink);text-align:left;transition:all .15s}
+.io-btn:active{background:var(--tea-l);border-color:var(--tea-m)}
+.io-btn-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.io-btn-icon.export{background:var(--tea-l)}
+.io-btn-icon.import{background:var(--blue-l)}
+.io-btn-info{flex:1}
+.io-btn-title{font-weight:500;font-size:14px;margin-bottom:.15rem}
+.io-btn-sub{font-size:12px;color:var(--muted)}
+.io-sep{text-align:center;font-size:12px;color:var(--muted);margin:.3rem 0 .5rem;padding-top:.5rem;border-top:1px solid var(--border)}
+.io-close{width:100%;background:none;border:1.5px solid var(--border);border-radius:10px;padding:.5rem;font-family:'DM Sans',sans-serif;font-size:14px;cursor:pointer;color:var(--muted);margin-top:.35rem}
+
+/* ── TOAST ── */
+.toast{position:fixed;top:calc(1rem + var(--safe-top));left:50%;transform:translateX(-50%) translateY(-12px);background:var(--tea);color:#fff;padding:.5rem 1.2rem;border-radius:20px;font-size:13px;z-index:200;opacity:0;transition:all .22s;pointer-events:none;white-space:nowrap;box-shadow:0 4px 12px rgba(92,61,30,.25)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--red)}
+.toast.ok{background:var(--green)}
+
+/* ── INSTALL BANNER ── */
+.install-banner{background:var(--tea-l);border-bottom:1px solid var(--border);padding:.6rem 1rem;display:none;align-items:center;gap:.6rem;flex-shrink:0}
+.install-banner.visible{display:flex}
+.install-banner p{flex:1;font-size:12px;color:var(--tea);line-height:1.4}
+.install-btn{background:var(--tea);color:#fff;border:none;border-radius:6px;padding:.35rem .75rem;font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap}
+.install-close{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:.2rem;line-height:1}
+
+/* HIDDEN file input */
+#file-import{display:none}
+</style>
+</head>
+<body>
+
+<div id="shell">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <div class="topbar-logo">&#9788; Collection 2024</div>
+      <div class="topbar-title">La Maison du Thé</div>
+    </div>
+    <div class="topbar-right">
+      <button class="icon-btn" id="btn-filter" title="Filtres allergènes & marques">
+        <svg viewBox="0 0 20 20"><path d="M3 5h14M6 10h8M9 15h2"/></svg>
+      </button>
+      <button class="icon-btn" id="btn-io" title="Importer / Exporter">
+        <svg viewBox="0 0 20 20"><path d="M10 3v10M6 9l4-4 4 4M5 15h10"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- INSTALL BANNER -->
+  <div class="install-banner" id="install-banner">
+    <p>📱 Installez l'app sur votre écran d'accueil pour l'utiliser hors-ligne !</p>
+    <button class="install-btn" id="install-btn">Installer</button>
+    <button class="install-close" id="install-close">&#10005;</button>
+  </div>
+
+  <!-- SEARCH BAR -->
+  <div class="searchbar">
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 16 16"><circle cx="6.5" cy="6.5" r="4.5"/><line x1="10.5" y1="10.5" x2="14" y2="14"/></svg>
+      <input id="search" type="search" placeholder="Thé, marque, arôme…">
+    </div>
+    <select class="sort-sel" id="sort-sel">
+      <option value="name">A→Z</option>
+      <option value="price-asc">Prix ↑</option>
+      <option value="price-desc">Prix ↓</option>
+      <option value="infusion">Infusion</option>
+      <option value="brand">Marque</option>
+      <option value="temp">Température</option>
+    </select>
+  </div>
+
+  <!-- SCROLL AREA -->
+  <div id="scroll-area">
+    <div class="chip-row" id="chip-row"></div>
+    <div class="stats-row" id="stats-row"></div>
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty" style="display:none">
+      <div class="empty-icon">🍵</div>
+      <p id="empty-msg">Aucun thé trouvé.</p>
+    </div>
+  </div>
+
+  <!-- FAB -->
+  <button class="fab" id="fab" title="Ajouter un thé">+</button>
+</div>
+
+<!-- FILTER PANEL -->
+<div class="filter-panel-backdrop" id="filter-panel-backdrop"></div>
+<div class="filter-panel" id="filter-panel">
+  <span class="filter-panel-handle"></span>
+  <div class="filter-panel-title">Filtres</div>
+  <div class="filter-section-lbl">Je suis allergique à</div>
+  <div class="ftoggle-row" id="allergen-toggles"></div>
+  <div class="filter-section-lbl">Marques</div>
+  <div class="ftoggle-row" id="brand-toggles"></div>
+  <button class="filter-reset-btn" id="filter-reset">Réinitialiser les filtres</button>
+</div>
+
+<!-- DETAIL PANEL -->
+<div class="panel-backdrop" id="panel-backdrop"></div>
+<div class="panel" id="panel">
+  <div class="panel-handle-bar" id="panel-handle-bar">
+    <div class="panel-handle"></div>
+  </div>
+  <div class="panel-header">
+    <div class="panel-type" id="panel-type"></div>
+    <div class="panel-name" id="panel-name"></div>
+    <div class="panel-badges-row" id="panel-badges"></div>
+  </div>
+  <div class="panel-scroll" id="panel-body"></div>
+  <div class="panel-actions" id="panel-actions">
+    <button class="panel-act-btn edit" id="panel-edit">
+      <svg viewBox="0 0 14 14"><path d="M9.5 2.5l2 2-7 7H2.5v-2l7-7z"/></svg> Modifier
+    </button>
+    <button class="panel-act-btn del" id="panel-delete">
+      <svg viewBox="0 0 14 14"><polyline points="2,4 12,4"/><path d="M5 4V3h4v1M5 6v5M9 6v5M3 4l1 8h6l1-8"/></svg> Supprimer
+    </button>
+  </div>
+</div>
+
+<!-- ADD/EDIT MODAL -->
+<div class="modal-backdrop" id="modal-backdrop"></div>
+<div class="modal" id="modal">
+  <div class="modal-handle-bar"><div class="modal-handle"></div></div>
+  <div class="modal-hdr">
+    <h2 id="modal-title">Nouveau thé</h2>
+    <button class="modal-x" id="modal-x">&#10005;</button>
+  </div>
+  <div class="modal-scroll">
+    <div class="form-row">
+      <label>Nom du thé *</label>
+      <input id="f-name" type="text" placeholder="ex : Darjeeling First Flush">
+    </div>
+    <div class="two-col">
+      <div class="form-row">
+        <label>Type *</label>
+        <select id="f-type">
+          <option>Thé vert</option><option>Thé noir</option><option>Thé blanc</option>
+          <option>Oolong</option><option>Pu-erh</option><option>Tisane</option>
+          <option>Matcha</option><option>Rooibos</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <label>Marque</label>
+        <div class="brand-wrap">
+          <input id="f-brand" type="text" placeholder="Lipton, CFT…" autocomplete="off">
+          <div class="brand-drop" id="brand-drop"></div>
+        </div>
+      </div>
+    </div>
+    <div class="form-row">
+      <label>Arômes * <small style="display:inline;text-transform:none;letter-spacing:0">(virgules)</small></label>
+      <input id="f-aromes" type="text" placeholder="ex : floral, muscat, miel">
+    </div>
+
+    <div class="sec-sep">Température &amp; Infusion</div>
+    <div class="form-row">
+      <label>Température recommandée *</label>
+      <div class="temp-row">
+        <input id="f-temp" type="number" min="50" max="100" step="1" placeholder="95" inputmode="numeric">
+        <span>°C (50–100)</span>
+      </div>
+      <div class="preset-btns" id="temp-presets"></div>
+    </div>
+    <div class="two-col">
+      <div class="form-row">
+        <label>Min (min) *</label>
+        <input id="f-imin" type="number" placeholder="2" min="0.5" step="0.5" inputmode="decimal">
+      </div>
+      <div class="form-row">
+        <label>Max (min) *</label>
+        <input id="f-imax" type="number" placeholder="3" min="0.5" step="0.5" inputmode="decimal">
+      </div>
+    </div>
+
+    <div class="sec-sep">Stock &amp; Disponibilité</div>
+    <div class="stock-section">
+      <div class="stock-section-title">Quantités disponibles</div>
+      <div class="stock-row">
+        <label>🌿 Vrac</label>
+        <input id="f-stock-vrac" type="number" min="0" step="1" placeholder="0" inputmode="numeric">
+        <span class="unit">g</span>
+        <span class="si none" id="si-vrac"></span>
+      </div>
+      <div class="stock-row">
+        <label>🍵 Sachets</label>
+        <input id="f-stock-sachets" type="number" min="0" step="1" placeholder="0" inputmode="numeric">
+        <span class="unit">sachets</span>
+        <span class="si none" id="si-sachets"></span>
+      </div>
+    </div>
+    <small style="font-size:11px;color:var(--muted);margin-top:.4rem;display:block">
+      Vrac : vert ≥ 50g · jaune &lt;50g · rouge = 0 &nbsp;|&nbsp; Sachets : vert ≥ 10 · jaune &lt;10 · rouge = 0
+    </small>
+
+    <div class="sec-sep">Ingrédients &amp; Allergènes</div>
+    <div class="form-row">
+      <label>Ingrédients <small style="display:inline;text-transform:none;letter-spacing:0">(virgules)</small></label>
+      <input id="f-ingredients" type="text" placeholder="ex : feuilles de thé, bergamote…">
+    </div>
+    <div class="form-row">
+      <label>Allergènes déclarés</label>
+      <div class="allergen-grid" id="allergen-checks"></div>
+    </div>
+    <div class="form-row">
+      <label>Note allergènes <small style="display:inline;text-transform:none;letter-spacing:0">(optionnel)</small></label>
+      <textarea id="f-note" rows="2" placeholder="ex : Peut contenir des traces de noix."></textarea>
+    </div>
+
+    <div class="sec-sep">Prix &amp; Apparence</div>
+    <div class="form-row">
+      <label>Prix au kilo (€) *</label>
+      <input id="f-price" type="number" placeholder="45" min="0" step="0.5" inputmode="decimal">
+    </div>
+    <div class="form-row">
+      <label>Couleur de la carte</label>
+      <div class="color-picker" id="color-picker"></div>
+    </div>
+  </div>
+  <div class="modal-foot">
+    <button class="btn-cancel" id="modal-cancel">Annuler</button>
+    <button class="btn-save" id="modal-save">Enregistrer</button>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE -->
+<div class="confirm-backdrop" id="confirm-backdrop">
+  <div class="confirm-box">
+    <h3>Supprimer ce thé ?</h3>
+    <p id="confirm-msg">Cette action est irréversible.</p>
+    <div class="confirm-btns">
+      <button class="btn-no" id="confirm-no">Annuler</button>
+      <button class="btn-del" id="confirm-yes">Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT/EXPORT SHEET -->
+<div class="io-backdrop" id="io-backdrop">
+  <div class="io-sheet">
+    <div class="io-handle"></div>
+    <div class="io-title">Import &amp; Export de données</div>
+
+    <button class="io-btn" id="io-export">
+      <div class="io-btn-icon export">📤</div>
+      <div class="io-btn-info">
+        <div class="io-btn-title">Exporter en JSON</div>
+        <div class="io-btn-sub">Télécharge teas.json — à conserver pour sauvegarder ou transférer</div>
+      </div>
+    </button>
+
+    <button class="io-btn" id="io-import-btn">
+      <div class="io-btn-icon import">📥</div>
+      <div class="io-btn-info">
+        <div class="io-btn-title">Importer depuis JSON</div>
+        <div class="io-btn-sub">Charge un fichier teas.json exporté depuis une autre appareil</div>
+      </div>
+    </button>
+
+    <div class="io-sep">Comment transférer PC ↔ Mobile</div>
+    <div style="font-size:12px;color:var(--muted);line-height:1.65;padding:.1rem .2rem">
+      <b style="color:var(--ink)">1.</b> Sur le PC, ouvrez l'app et cliquez "Exporter en JSON"<br>
+      <b style="color:var(--ink)">2.</b> Envoyez-vous le fichier <code style="background:var(--cream);padding:.1rem .3rem;border-radius:4px">teas.json</code> (email, Drive, WhatsApp…)<br>
+      <b style="color:var(--ink)">3.</b> Sur mobile, ouvrez ce menu et cliquez "Importer depuis JSON"<br>
+      <b style="color:var(--ink)">4.</b> Sélectionnez le fichier reçu → vos thés apparaissent instantanément
+    </div>
+
+    <button class="io-close" id="io-close">Fermer</button>
+  </div>
+</div>
+
+<input type="file" id="file-import" accept=".json,application/json">
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// CONSTANTES
+// ═══════════════════════════════════════════════════
+const COLORS = [
+  '#5c8a4a','#3a7a6a','#8a5a3a','#c07a3a','#6a7a3a',
+  '#7a3a5a','#3a5a7a','#a04040','#6a3a8a','#3a7a9a'
+];
+const ALLERGENS = [
+  {id:'gluten',       label:'Gluten'},
+  {id:'lait',         label:'Lait'},
+  {id:'oeufs',        label:'Œufs'},
+  {id:'fruits_coque', label:'Fruits à coque'},
+  {id:'arachides',    label:'Arachides'},
+  {id:'soja',         label:'Soja'},
+  {id:'sesame',       label:'Sésame'},
+  {id:'sulfites',     label:'Sulfites'},
+  {id:'lupin',        label:'Lupin'},
+  {id:'celeri',       label:'Céleri'},
+  {id:'moutarde',     label:'Moutarde'},
+];
+const TEMP_PRESETS = [
+  {label:'Thé vert',temp:75},{label:'Blanc/Matcha',temp:72},
+  {label:'Oolong',temp:87},{label:'Thé noir',temp:97},{label:'Tisane/Rooibos',temp:98},
+];
+const DEFAULT_BRANDS = ['Lipton','CFT','Mariage Frères','Dammann','Kusmi Tea','Palais des Thés','Whittard','Twinings','Bigelow'];
+const VRAC_LOW   = 50;
+const SACHET_LOW = 10;
+const STORAGE_KEY = 'tea_shop_v5';
+
+// ═══════════════════════════════════════════════════
+// ÉTAT
+// ═══════════════════════════════════════════════════
+let teas = [], tempOverrides = {};
+let activeType = 'Tous', activeAllergens = new Set(), activeBrands = new Set();
+let searchQ = '', editId = null, deleteId = null;
+let selectedColor = COLORS[0], checkedAllergens = new Set();
+let currentPanelId = null;
+let timerInterval = null, timerSeconds = 0, timerTotal = 0, timerRunning = false;
+let deferredInstallPrompt = null;
+
+// ═══════════════════════════════════════════════════
+// PERSISTANCE
+// ═══════════════════════════════════════════════════
+function loadData() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) { const d = JSON.parse(raw); teas = Array.isArray(d)?d:(d.teas||[]); tempOverrides = d.tempOverrides||{}; }
+    else { teas = defaultTeas(); tempOverrides = {}; }
+  } catch(e) { teas = defaultTeas(); tempOverrides = {}; }
+}
+function saveData() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({teas, tempOverrides}));
+}
+
+// ═══════════════════════════════════════════════════
+// DONNÉES PAR DÉFAUT
+// ═══════════════════════════════════════════════════
+function defaultTeas() {
+  return [
+    {id:1,name:'Darjeeling First Flush',type:'Thé noir',brand:'Mariage Frères',aromes:['muscat','floral','fruité'],ingredients:['thé noir Darjeeling','bergamote naturelle'],allergens:[],allergyNote:'',infusionMin:2,infusionMax:3,price:85,temp:97,color:COLORS[7],stockVrac:120,stockSachets:25},
+    {id:2,name:'Gyokuro',type:'Thé vert',brand:'Palais des Thés',aromes:['umami','herbe','doux'],ingredients:['feuilles de thé vert Gyokuro'],allergens:[],allergyNote:'',infusionMin:1.5,infusionMax:2,price:120,temp:72,color:COLORS[0],stockVrac:35,stockSachets:0},
+    {id:3,name:'Chai Épicé',type:'Tisane',brand:'Lipton',aromes:['cannelle','gingembre','cardamome'],ingredients:['thé noir Assam','lait en poudre','cannelle','gingembre','cardamome'],allergens:['lait'],allergyNote:'Contient du lait en poudre.',infusionMin:4,infusionMax:6,price:45,temp:98,color:COLORS[2],stockVrac:0,stockSachets:7},
+    {id:4,name:'Matcha Cérémoniel',type:'Matcha',brand:'CFT',aromes:['végétal','umami','doux'],ingredients:['poudre de thé Matcha'],allergens:['gluten'],allergyNote:'Conditionné dans un atelier manipulant du gluten.',infusionMin:1,infusionMax:2,price:150,temp:72,color:COLORS[0],stockVrac:80,stockSachets:0},
+    {id:5,name:'Silver Needle',type:'Thé blanc',brand:'Dammann',aromes:['miel','melon','fleuri'],ingredients:['bourgeons Bai Hao Yin Zhen'],allergens:[],allergyNote:'',infusionMin:3,infusionMax:5,price:95,temp:70,color:COLORS[3],stockVrac:60,stockSachets:15},
+    {id:6,name:'Rooibos Vanille',type:'Rooibos',brand:'Lipton',aromes:['vanille','caramel','boisé'],ingredients:['rooibos rouge','extrait de vanille'],allergens:[],allergyNote:'Peut contenir traces de fruits à coque.',infusionMin:5,infusionMax:7,price:35,temp:98,color:COLORS[4],stockVrac:0,stockSachets:0},
+  ];
+}
+
+// ═══════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════
+const getAllBrands  = () => [...new Set([...DEFAULT_BRANDS,...teas.map(t=>t.brand).filter(Boolean)])].sort();
+const getUsedBrands = () => [...new Set(teas.map(t=>t.brand).filter(Boolean))].sort();
+const hasConflict   = t  => [...activeAllergens].some(a=>(t.allergens||[]).includes(a));
+const getTemp       = t  => tempOverrides[t.id]!==undefined ? tempOverrides[t.id] : (t.temp||95);
+const fmtEuro       = n  => n.toLocaleString('fr-FR',{style:'currency',currency:'EUR'});
+const fmtTime       = s  => `${String(Math.floor(s/60)).padStart(2,'0')}:${String(Math.round(s%60)).padStart(2,'0')}`;
+
+function stockStatus(qty, type) {
+  if (qty===null||qty===undefined||qty==='') return 'none';
+  const q = parseInt(qty);
+  if (isNaN(q)||q<=0) return 'out';
+  return (type==='vrac' ? q<VRAC_LOW : q<SACHET_LOW) ? 'low' : 'ok';
+}
+function stockBadgeHTML(label, qty, type) {
+  const s = stockStatus(qty, type);
+  if (s==='none') return '';
+  const cls  = {ok:'badge-stock-ok',low:'badge-stock-low',out:'badge-stock-out'}[s];
+  const dotC = {ok:'dot-ok',low:'dot-low',out:'dot-out'}[s];
+  const txt  = {ok:'Dispo',low:'Limité',out:'Épuisé'}[s];
+  return `<span class="badge ${cls}"><span class="badge-dot ${dotC}"></span>${label} — ${txt}</span>`;
+}
+function stockCardHTML(label, icon, qty, type) {
+  const s = stockStatus(qty, type);
+  if (s==='none') return '';
+  const cls    = {ok:'ok',low:'low',out:'out'}[s];
+  const status = {ok:'En stock',low:'Stock limité',out:'Épuisé'}[s];
+  const q = parseInt(qty);
+  const qty_display = s==='out' ? '0 '+(type==='vrac'?'g':'sachet') : q+(type==='vrac'?' g':' sachet'+(q>1?'s':''));
+  return `<div class="stock-card ${cls}"><div class="sc-icon">${icon}</div><div class="sc-type">${label}</div><div class="sc-qty">${qty_display}</div><div class="sc-status">${status}</div></div>`;
+}
+
+// ═══════════════════════════════════════════════════
+// FILTRAGE & TRI
+// ═══════════════════════════════════════════════════
+function getFiltered() {
+  let list = [...teas];
+  if (activeType!=='Tous')   list = list.filter(t=>t.type===activeType);
+  if (activeBrands.size>0)  list = list.filter(t=>activeBrands.has(t.brand||''));
+  if (searchQ) {
+    const q = searchQ.toLowerCase();
+    list = list.filter(t=>
+      t.name.toLowerCase().includes(q)||t.type.toLowerCase().includes(q)||
+      (t.brand||'').toLowerCase().includes(q)||(t.aromes||[]).some(a=>a.toLowerCase().includes(q))||
+      (t.ingredients||[]).some(i=>i.toLowerCase().includes(q))
+    );
+  }
+  const sort = document.getElementById('sort-sel').value;
+  if      (sort==='price-asc')  list.sort((a,b)=>a.price-b.price);
+  else if (sort==='price-desc') list.sort((a,b)=>b.price-a.price);
+  else if (sort==='infusion')   list.sort((a,b)=>a.infusionMin-b.infusionMin);
+  else if (sort==='brand')      list.sort((a,b)=>(a.brand||'').localeCompare(b.brand||''));
+  else if (sort==='temp')       list.sort((a,b)=>getTemp(a)-getTemp(b));
+  else                          list.sort((a,b)=>a.name.localeCompare(b.name));
+  return list;
+}
+
+// ═══════════════════════════════════════════════════
+// RENDU
+// ═══════════════════════════════════════════════════
+function render() {
+  // Type chips
+  const types = ['Tous',...new Set(teas.map(t=>t.type))];
+  document.getElementById('chip-row').innerHTML = types.map(t=>
+    `<button class="chip${t===activeType?' active':''}" data-type="${t}">${t}</button>`
+  ).join('');
+
+  // Stats
+  const brands   = getUsedBrands().length;
+  const avgPrice = teas.length ? Math.round(teas.reduce((s,t)=>s+t.price,0)/teas.length) : 0;
+  const outCount = teas.filter(t=>stockStatus(t.stockVrac,'vrac')==='out'&&stockStatus(t.stockSachets,'sachet')==='out').length;
+  const totalActive = activeAllergens.size + activeBrands.size;
+  document.getElementById('stats-row').innerHTML = `
+    <div class="stat-pill"><strong>${teas.length}</strong>thés</div>
+    <div class="stat-pill"><strong>${new Set(teas.map(t=>t.type)).size}</strong>types</div>
+    <div class="stat-pill"><strong>${brands}</strong>marques</div>
+    <div class="stat-pill"><strong>${avgPrice} €</strong>prix moy./kg</div>
+    ${outCount>0?`<div class="stat-pill" style="border-color:var(--red-b)"><strong style="color:var(--red)">${outCount}</strong><span style="color:var(--red)">épuisé${outCount>1?'s':''}</span></div>`:''}
+    ${totalActive>0?`<div class="stat-pill" style="border-color:var(--blue-b);background:var(--blue-l)"><strong style="color:var(--blue)">${totalActive}</strong><span style="color:var(--blue)">filtre${totalActive>1?'s':''}</span></div>`:''}`;
+
+  // Grid
+  const list  = getFiltered();
+  const grid  = document.getElementById('grid');
+  const empty = document.getElementById('empty');
+  if (!list.length) {
+    grid.innerHTML = '';
+    empty.style.display = 'block';
+    document.getElementById('empty-msg').textContent =
+      searchQ?`Aucun résultat pour "${searchQ}".`:activeBrands.size?'Aucun thé pour cette sélection.':'Aucun thé dans cette catégorie.';
+    return;
+  }
+  empty.style.display = 'none';
+  grid.innerHTML = list.map(t=>{
+    const conflict = hasConflict(t);
+    const safe     = activeAllergens.size>0&&!conflict;
+    const svB = stockBadgeHTML('Vrac',t.stockVrac,'vrac');
+    const ssB = stockBadgeHTML('Sachets',t.stockSachets,'sachet');
+    return `
+    <div class="card${conflict?' alert-card':''}" data-id="${t.id}" id="card-${t.id}">
+      <div class="card-stripe" style="background:${t.color}"></div>
+      <div class="card-body">
+        <div class="card-top">
+          <div class="card-type">${t.type}</div>
+          <div class="card-badges">
+            ${conflict?'<span class="badge badge-alert">⚠</span>':''}
+            ${safe?'<span class="badge badge-safe">✓</span>':''}
+            ${t.brand?`<span class="badge badge-brand">${t.brand}</span>`:''}
+          </div>
+        </div>
+        <div class="card-name">${t.name}</div>
+        <div class="aromes">${(t.aromes||[]).map(a=>`<span class="arome-tag">${a}</span>`).join('')}</div>
+        ${(svB||ssB)?`<div class="card-stock-row">${svB}${ssB}</div>`:''}
+        <div class="card-meta">
+          <div>
+            <div class="meta-lbl">Infusion</div>
+            <div class="meta-val">${t.infusionMin}–${t.infusionMax} min</div>
+            <div class="card-temp-lbl" id="ctmp-${t.id}">&#9670; ${getTemp(t)}°C</div>
+          </div>
+          <div style="text-align:right">
+            <div class="meta-lbl">Prix/kg</div>
+            <div class="meta-val">${fmtEuro(t.price)}</div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════
+// FILTER PANEL
+// ═══════════════════════════════════════════════════
+function openFilterPanel() {
+  document.getElementById('allergen-toggles').innerHTML = ALLERGENS.map(a=>
+    `<div class="ftoggle${activeAllergens.has(a.id)?' a-red':''}" data-allergen="${a.id}"><div class="dot"></div>${a.label}</div>`
+  ).join('');
+  const brands = getUsedBrands();
+  document.getElementById('brand-toggles').innerHTML = brands.length
+    ? brands.map(b=>`<div class="ftoggle${activeBrands.has(b)?' a-blue':''}" data-brand="${b}"><div class="dot"></div>${b}</div>`).join('')
+    : '<span style="font-size:12px;color:var(--muted);font-style:italic">Aucune marque</span>';
+  document.getElementById('filter-panel-backdrop').classList.add('open');
+  document.getElementById('filter-panel').classList.add('open');
+}
+function closeFilterPanel() {
+  document.getElementById('filter-panel-backdrop').classList.remove('open');
+  document.getElementById('filter-panel').classList.remove('open');
+}
+
+// ═══════════════════════════════════════════════════
+// DETAIL PANEL
+// ═══════════════════════════════════════════════════
+function openPanel(id) {
+  const t = teas.find(x=>x.id===id);
+  if (!t) return;
+  currentPanelId = id;
+  stopTimer();
+
+  document.getElementById('panel-type').textContent  = t.type;
+  document.getElementById('panel-name').textContent  = t.name;
+
+  const conflict = hasConflict(t);
+  const cNames   = [...activeAllergens].filter(a=>(t.allergens||[]).includes(a)).map(a=>ALLERGENS.find(x=>x.id===a)?.label).filter(Boolean);
+  document.getElementById('panel-badges').innerHTML = `
+    ${t.brand?`<span class="badge badge-brand">${t.brand}</span>`:''}
+    ${stockBadgeHTML('Vrac',t.stockVrac,'vrac')}
+    ${stockBadgeHTML('Sachets',t.stockSachets,'sachet')}
+    ${conflict?`<span class="badge badge-alert">⚠ ${cNames.join(', ')}</span>`:''}`;
+
+  const temp   = getTemp(t);
+  const defMin = Math.round((t.infusionMin+t.infusionMax)/2*2)/2;
+
+  let h = '';
+
+  if (conflict) h += `<div class="allergy-warn"><span>⚠</span><span>Contient : <strong>${cNames.join(', ')}</strong></span></div>`;
+
+  h += `<div class="panel-sec"><div class="panel-sec-title">Arômes</div>
+    <div class="panel-tags">${(t.aromes||[]).map(a=>`<span class="ptag ptag-arome">${a}</span>`).join('')}</div></div>`;
+
+  if ((t.ingredients||[]).length) {
+    h += `<div class="panel-sec"><div class="panel-sec-title">Ingrédients</div><div class="panel-tags">`;
+    h += (t.ingredients||[]).map(ing=>{
+      const isA=(t.allergens||[]).some(a=>{const l=(ALLERGENS.find(x=>x.id===a)?.label||'').toLowerCase();return ing.toLowerCase().includes(l.split('/')[0].trim());});
+      return `<span class="ptag ptag-ing${isA?' allerg':''}">${ing}</span>`;
+    }).join('');
+    h += `</div></div>`;
+  }
+  if ((t.allergens||[]).length) {
+    h += `<div class="panel-sec"><div class="panel-sec-title">Allergènes déclarés</div><div class="panel-tags">`;
+    h += (t.allergens||[]).map(a=>{const f=ALLERGENS.find(x=>x.id===a);return f?`<span class="ptag ptag-allergen">${f.label}</span>`:''}).join('');
+    h += `</div></div>`;
+  }
+  if (t.allergyNote) h += `<div class="allergy-note-box">${t.allergyNote}</div>`;
+
+  const svCard = stockCardHTML('Vrac','🌿',t.stockVrac,'vrac');
+  const ssCard = stockCardHTML('Sachets','🍵',t.stockSachets,'sachet');
+  if (svCard||ssCard) h += `<div class="panel-sec"><div class="panel-sec-title">Disponibilité &amp; Stock</div><div class="stock-panel-grid">${svCard}${ssCard}</div></div>`;
+
+  h += `<div class="panel-sec"><div class="panel-sec-title">Infusion &amp; Prix</div>
+    <div class="panel-meta-grid">
+      <div class="pmc"><div class="lbl">Min</div><div class="val">${t.infusionMin} min</div></div>
+      <div class="pmc"><div class="lbl">Max</div><div class="val">${t.infusionMax} min</div></div>
+      <div class="pmc" style="grid-column:span 2"><div class="lbl">Prix au kilo</div><div class="val">${fmtEuro(t.price)}</div></div>
+    </div></div>`;
+
+  h += `<div class="panel-sec"><div class="panel-sec-title">Température de l'eau</div>
+    <div class="temp-ctrl">
+      <div class="temp-ctrl-label">Recommandée</div>
+      <button class="temp-ctrl-btn" id="temp-minus">−</button>
+      <div class="temp-ctrl-val" id="temp-display">${temp}°C</div>
+      <button class="temp-ctrl-btn" id="temp-plus">+</button>
+    </div>
+    <div class="temp-hint">− / + pour ajuster · sauvegardé automatiquement</div></div>`;
+
+  h += `<div class="panel-sec"><div class="panel-sec-title">Timer d'infusion</div>
+    <div class="timer-box">
+      <div class="timer-slider-row">
+        <span>${t.infusionMin}'</span>
+        <input type="range" id="timer-slider" min="${t.infusionMin}" max="${t.infusionMax}" step="0.5" value="${defMin}">
+        <span>${t.infusionMax}'</span>
+        <output id="timer-out">${defMin} min</output>
+      </div>
+      <div class="timer-display" id="timer-display">${fmtTime(defMin*60)}</div>
+      <div class="timer-bar-wrap"><div class="timer-bar" id="timer-bar"></div></div>
+      <div class="timer-btns">
+        <button class="timer-btn start" id="timer-start">▶ Démarrer</button>
+        <button class="timer-btn" id="timer-reset">↺ Reset</button>
+      </div>
+      <div class="timer-done" id="timer-done">✓ Infusion terminée, bonne dégustation !</div>
+    </div></div>`;
+
+  document.getElementById('panel-body').innerHTML = h;
+
+  timerTotal = defMin*60; timerSeconds = timerTotal; timerRunning = false;
+  updateTimerBar();
+
+  document.getElementById('timer-slider').addEventListener('input',function(){
+    const v=parseFloat(this.value);
+    document.getElementById('timer-out').textContent=v+' min';
+    stopTimer(); timerTotal=v*60; timerSeconds=timerTotal;
+    document.getElementById('timer-start').textContent='▶ Démarrer';
+    document.getElementById('timer-start').className='timer-btn start';
+    const done=document.getElementById('timer-done'); if(done) done.style.display='none';
+    updateTimerUI();
+  });
+  document.getElementById('timer-start').addEventListener('click',toggleTimer);
+  document.getElementById('timer-reset').addEventListener('click',resetTimer);
+  document.getElementById('temp-minus').addEventListener('click',()=>adjustTemp(id,-1));
+  document.getElementById('temp-plus').addEventListener('click', ()=>adjustTemp(id,+1));
+
+  document.getElementById('panel-backdrop').classList.add('open');
+  document.getElementById('panel').classList.add('open');
+}
+
+function closePanel() {
+  stopTimer();
+  currentPanelId = null;
+  document.getElementById('panel-backdrop').classList.remove('open');
+  document.getElementById('panel').classList.remove('open');
+}
+
+// ─── TIMER ──────────────────────────────────────────
+function toggleTimer() {
+  const btn = document.getElementById('timer-start');
+  if (!btn) return;
+  if (timerRunning) {
+    stopTimer(); btn.textContent='▶ Reprendre'; btn.className='timer-btn start';
+  } else {
+    if (timerSeconds<=0) return;
+    timerRunning=true; btn.textContent='⏸ Pause'; btn.className='timer-btn pause';
+    timerInterval=setInterval(()=>{
+      timerSeconds--;updateTimerUI();
+      if(timerSeconds<=0){
+        stopTimer();
+        const d=document.getElementById('timer-display'),b=document.getElementById('timer-start'),done=document.getElementById('timer-done');
+        if(d) d.textContent='✓ Prêt !';
+        if(b){b.textContent='▶ Démarrer';b.className='timer-btn start';}
+        if(done) done.style.display='block';
+        showToast('Infusion terminée ! 🍵','ok');
+      }
+    },1000);
+  }
+}
+function stopTimer(){clearInterval(timerInterval);timerRunning=false;}
+function resetTimer(){
+  stopTimer();
+  const sl=document.getElementById('timer-slider');
+  if(sl){timerTotal=parseFloat(sl.value)*60;timerSeconds=timerTotal;}
+  const btn=document.getElementById('timer-start');
+  if(btn){btn.textContent='▶ Démarrer';btn.className='timer-btn start';}
+  const done=document.getElementById('timer-done');if(done)done.style.display='none';
+  updateTimerUI();
+}
+function updateTimerUI(){
+  const d=document.getElementById('timer-display');if(d)d.textContent=fmtTime(timerSeconds);
+  updateTimerBar();
+}
+function updateTimerBar(){
+  const b=document.getElementById('timer-bar');
+  if(b&&timerTotal>0)b.style.width=((timerTotal-timerSeconds)/timerTotal*100)+'%';
+}
+
+// ─── TEMP ────────────────────────────────────────────
+function adjustTemp(id,delta){
+  const t=teas.find(x=>x.id===id);if(!t)return;
+  const next=Math.min(100,Math.max(50,getTemp(t)+delta));
+  tempOverrides[id]=next;
+  const d=document.getElementById('temp-display');if(d)d.textContent=next+'°C';
+  const c=document.getElementById('ctmp-'+id);if(c)c.textContent='◆ '+next+'°C';
+  saveData();
+}
+
+// ═══════════════════════════════════════════════════
+// MODAL ADD/EDIT
+// ═══════════════════════════════════════════════════
+function openModal(tea) {
+  editId = tea?tea.id:null;
+  document.getElementById('modal-title').textContent = tea?'Modifier le thé':'Nouveau thé';
+  document.getElementById('f-name').value        = tea?tea.name:'';
+  document.getElementById('f-type').value        = tea?tea.type:'Thé vert';
+  document.getElementById('f-brand').value       = tea?(tea.brand||''):'';
+  document.getElementById('f-aromes').value      = tea?(tea.aromes||[]).join(', '):'';
+  document.getElementById('f-ingredients').value = tea?(tea.ingredients||[]).join(', '):'';
+  document.getElementById('f-note').value        = tea?(tea.allergyNote||''):'';
+  document.getElementById('f-imin').value        = tea?tea.infusionMin:'';
+  document.getElementById('f-imax').value        = tea?tea.infusionMax:'';
+  document.getElementById('f-price').value       = tea?tea.price:'';
+  const sv=tea&&tea.stockVrac!==undefined?tea.stockVrac:'';
+  const ss=tea&&tea.stockSachets!==undefined?tea.stockSachets:'';
+  document.getElementById('f-stock-vrac').value    = sv;
+  document.getElementById('f-stock-sachets').value = ss;
+  updateSI('vrac',sv); updateSI('sachet',ss);
+  const tv=tea?(tea.temp||95):95;
+  document.getElementById('f-temp').value=tv;
+  buildTempPresets(tv); buildColorPicker(tea?tea.color:COLORS[0]); buildAllergenChecks(tea?(tea.allergens||[]):[]);
+  document.querySelectorAll('#modal input').forEach(el=>el.classList.remove('error'));
+  document.getElementById('modal-backdrop').classList.add('open');
+  document.getElementById('modal').classList.add('open');
+  setTimeout(()=>document.getElementById('f-name').focus(),300);
+}
+function closeModal(){
+  document.getElementById('modal-backdrop').classList.remove('open');
+  document.getElementById('modal').classList.remove('open');
+  document.getElementById('brand-drop').classList.remove('open');
+  editId=null;
+}
+function saveTea(){
+  const name=document.getElementById('f-name').value.trim();
+  const type=document.getElementById('f-type').value;
+  const brand=document.getElementById('f-brand').value.trim();
+  const aromesRaw=document.getElementById('f-aromes').value.trim();
+  const ingredRaw=document.getElementById('f-ingredients').value.trim();
+  const allergyNote=document.getElementById('f-note').value.trim();
+  const infMin=parseFloat(document.getElementById('f-imin').value);
+  const infMax=parseFloat(document.getElementById('f-imax').value);
+  const price=parseFloat(document.getElementById('f-price').value);
+  const temp=Math.min(100,Math.max(50,parseInt(document.getElementById('f-temp').value)||95));
+  const svRaw=document.getElementById('f-stock-vrac').value;
+  const ssRaw=document.getElementById('f-stock-sachets').value;
+  const stockVrac=svRaw!==''?parseInt(svRaw):null;
+  const stockSachets=ssRaw!==''?parseInt(ssRaw):null;
+
+  let ok=true;
+  [['f-name',!name],['f-aromes',!aromesRaw],['f-imin',isNaN(infMin)],['f-imax',isNaN(infMax)],['f-price',isNaN(price)]]
+    .forEach(([id,err])=>{document.getElementById(id).classList.toggle('error',err);if(err)ok=false;});
+  if(!ok){showToast('Complétez les champs obligatoires (*)','err');return;}
+  if(infMin>infMax){document.getElementById('f-imax').classList.add('error');showToast('Infusion max doit être ≥ min','err');return;}
+
+  const aromes=aromesRaw.split(',').map(a=>a.trim()).filter(Boolean);
+  const ingredients=ingredRaw?ingredRaw.split(',').map(a=>a.trim()).filter(Boolean):[];
+  const allergens=[...checkedAllergens];
+
+  if(editId){
+    const i=teas.findIndex(t=>t.id===editId);
+    if(i>-1){teas[i]={...teas[i],name,type,brand,aromes,ingredients,allergens,allergyNote,infusionMin:infMin,infusionMax:infMax,price,temp,color:selectedColor,stockVrac,stockSachets};delete tempOverrides[editId];}
+    saveData();closeModal();render();showToast('Thé modifié !');
+    if(currentPanelId===editId){openPanel(editId);}
+  } else {
+    const id=Date.now();
+    teas.push({id,name,type,brand,aromes,ingredients,allergens,allergyNote,infusionMin:infMin,infusionMax:infMax,price,temp,color:selectedColor,stockVrac,stockSachets});
+    saveData();closeModal();render();showToast('Thé ajouté !');
+    setTimeout(()=>{const el=document.getElementById('card-'+id);if(el){el.classList.add('new-card');el.scrollIntoView({behavior:'smooth',block:'nearest'});}},60);
+  }
+}
+
+function updateSI(type,qty){
+  const id=type==='vrac'?'si-vrac':'si-sachets';
+  const el=document.getElementById(id);if(!el)return;
+  const s=stockStatus(qty,type);
+  if(s==='none'||qty===''||qty===null||qty===undefined){el.className='si none';el.textContent='';return;}
+  const m={ok:{c:'ok',t:'En stock'},low:{c:'low',t:'Limité'},out:{c:'out',t:'Épuisé'}};
+  el.className=`si ${m[s].c}`;el.textContent=m[s].t;
+}
+function buildColorPicker(cur){
+  selectedColor=cur||COLORS[0];
+  document.getElementById('color-picker').innerHTML=COLORS.map(c=>
+    `<div class="color-dot${c===selectedColor?' sel':''}" style="background:${c}" data-color="${c}"></div>`
+  ).join('');
+}
+function buildAllergenChecks(sel=[]){
+  checkedAllergens=new Set(sel);
+  document.getElementById('allergen-checks').innerHTML=ALLERGENS.map(a=>
+    `<label class="achk${checkedAllergens.has(a.id)?' on':''}">
+      <input type="checkbox" data-ac="${a.id}" ${checkedAllergens.has(a.id)?'checked':''}> ${a.label}
+    </label>`
+  ).join('');
+}
+function buildTempPresets(cur){
+  document.getElementById('temp-presets').innerHTML=TEMP_PRESETS.map(p=>
+    `<button type="button" class="preset-btn${cur===p.temp?' active':''}" data-preset="${p.temp}">${p.label} — ${p.temp}°C</button>`
+  ).join('');
+}
+function updateBrandDrop(){
+  const val=document.getElementById('f-brand').value.trim().toLowerCase();
+  const hits=val?getAllBrands().filter(b=>b.toLowerCase().includes(val)):getAllBrands();
+  const drop=document.getElementById('brand-drop');
+  if(!hits.length){drop.classList.remove('open');return;}
+  drop.innerHTML=hits.map(b=>`<div class="brand-opt" data-brand="${b}">${b}</div>`).join('');
+  drop.classList.add('open');
+}
+
+// ═══════════════════════════════════════════════════
+// DELETE
+// ═══════════════════════════════════════════════════
+function askDelete(id){
+  deleteId=id;
+  const t=teas.find(x=>x.id===id);
+  document.getElementById('confirm-msg').textContent=t?`Supprimer "${t.name}" ? Cette action est irréversible.`:'Cette action est irréversible.';
+  document.getElementById('confirm-backdrop').classList.add('open');
+}
+function closeConfirm(){document.getElementById('confirm-backdrop').classList.remove('open');deleteId=null;}
+function confirmDelete(){
+  if(!deleteId)return;
+  const t=teas.find(x=>x.id===deleteId);
+  teas=teas.filter(x=>x.id!==deleteId);
+  delete tempOverrides[deleteId];
+  saveData();closeConfirm();
+  if(currentPanelId===deleteId)closePanel();
+  render();showToast(`"${t?t.name:'Thé'}" supprimé.`);
+}
+
+// ═══════════════════════════════════════════════════
+// IMPORT / EXPORT
+// ═══════════════════════════════════════════════════
+function openIOSheet(){document.getElementById('io-backdrop').classList.add('open');}
+function closeIOSheet(){document.getElementById('io-backdrop').classList.remove('open');}
+
+function exportJSON(){
+  const data = JSON.stringify({teas, tempOverrides}, null, 2);
+  const blob = new Blob([data],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'teas.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+  closeIOSheet();
+  showToast('Fichier teas.json exporté !','ok');
+}
+
+function importJSON(file){
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      const d=JSON.parse(e.target.result);
+      const imported = Array.isArray(d)?d:(d.teas||[]);
+      const importedTemp = d.tempOverrides||{};
+      if(!imported.length){showToast('Aucun thé trouvé dans ce fichier.','err');return;}
+      // Merge : on ajoute les thés dont l'id n'existe pas encore
+      let added=0, updated=0;
+      imported.forEach(t=>{
+        const idx=teas.findIndex(x=>x.id===t.id);
+        if(idx>-1){teas[idx]=t;updated++;}
+        else{teas.push(t);added++;}
+      });
+      Object.assign(tempOverrides,importedTemp);
+      saveData();render();
+      closeIOSheet();
+      showToast(`${added} ajouté${added>1?'s':''}, ${updated} mis à jour.`,'ok');
+    }catch(err){
+      showToast('Fichier JSON invalide.','err');
+    }
+  };
+  reader.readAsText(file);
+}
+
+// ═══════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════
+function showToast(msg,type){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.className='toast'+(type==='err'?' err':type==='ok'?' ok':'');
+  el.classList.add('show');clearTimeout(el._t);el._t=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+// ═══════════════════════════════════════════════════
+// EVENT DELEGATION
+// ═══════════════════════════════════════════════════
+document.addEventListener('click',function(e){
+  const el=e.target;
+
+  // Type chip
+  if(el.classList.contains('chip')){activeType=el.dataset.type;render();return;}
+
+  // Allergen toggle
+  const aT=el.closest('.ftoggle[data-allergen]');
+  if(aT){const id=aT.dataset.allergen;if(activeAllergens.has(id))activeAllergens.delete(id);else activeAllergens.add(id);render();closeFilterPanel();return;}
+
+  // Brand toggle
+  const bT=el.closest('.ftoggle[data-brand]');
+  if(bT){const b=bT.dataset.brand;if(activeBrands.has(b))activeBrands.delete(b);else activeBrands.add(b);render();closeFilterPanel();return;}
+
+  // Card → panel
+  const card=el.closest('.card');
+  if(card){openPanel(parseInt(card.dataset.id));return;}
+
+  // Color dot
+  if(el.classList.contains('color-dot')){
+    selectedColor=el.dataset.color;
+    document.querySelectorAll('.color-dot').forEach(d=>d.classList.toggle('sel',d.dataset.color===selectedColor));
+    return;
+  }
+
+  // Allergen checkbox
+  if(el.dataset.ac){
+    const id=el.dataset.ac;
+    if(el.checked)checkedAllergens.add(id);else checkedAllergens.delete(id);
+    el.closest('.achk').classList.toggle('on',el.checked);
+    return;
+  }
+
+  // Temp preset
+  if(el.classList.contains('preset-btn')){
+    const v=parseInt(el.dataset.preset);
+    document.getElementById('f-temp').value=v;
+    document.querySelectorAll('.preset-btn').forEach(b=>b.classList.toggle('active',parseInt(b.dataset.preset)===v));
+    return;
+  }
+
+  // Brand opt
+  if(el.classList.contains('brand-opt')){
+    document.getElementById('f-brand').value=el.dataset.brand;
+    document.getElementById('brand-drop').classList.remove('open');
+    return;
+  }
+
+  // Backdrop closes
+  if(el.id==='panel-backdrop')        {closePanel();return;}
+  if(el.id==='filter-panel-backdrop') {closeFilterPanel();return;}
+  if(el.id==='modal-backdrop')        {closeModal();return;}
+  if(el.id==='confirm-backdrop')      {closeConfirm();return;}
+  if(el.id==='io-backdrop')           {closeIOSheet();return;}
+
+  if(!el.closest('.brand-wrap')) document.getElementById('brand-drop').classList.remove('open');
+});
+
+// Stock input live update
+document.addEventListener('input',function(e){
+  if(e.target.id==='f-stock-vrac')    updateSI('vrac',e.target.value);
+  if(e.target.id==='f-stock-sachets') updateSI('sachet',e.target.value);
+});
+
+// Swipe to close panel
+let touchStartY=0;
+document.getElementById('panel-handle-bar').addEventListener('touchstart',e=>{touchStartY=e.touches[0].clientY;},{passive:true});
+document.getElementById('panel-handle-bar').addEventListener('touchend',e=>{
+  if(e.changedTouches[0].clientY-touchStartY>60)closePanel();
+},{passive:true});
+
+// Button bindings
+document.getElementById('btn-filter').addEventListener('click',openFilterPanel);
+document.getElementById('btn-io').addEventListener('click',openIOSheet);
+document.getElementById('fab').addEventListener('click',()=>openModal(null));
+document.getElementById('panel-close')||null;
+document.getElementById('panel-edit').addEventListener('click',()=>{if(currentPanelId){closePanel();openModal(teas.find(t=>t.id===currentPanelId));}});
+document.getElementById('panel-delete').addEventListener('click',()=>{if(currentPanelId)askDelete(currentPanelId);});
+document.getElementById('modal-x').addEventListener('click',closeModal);
+document.getElementById('modal-cancel').addEventListener('click',closeModal);
+document.getElementById('modal-save').addEventListener('click',saveTea);
+document.getElementById('confirm-no').addEventListener('click',closeConfirm);
+document.getElementById('confirm-yes').addEventListener('click',confirmDelete);
+document.getElementById('filter-reset').addEventListener('click',()=>{activeAllergens=new Set();activeBrands=new Set();render();closeFilterPanel();showToast('Filtres réinitialisés.');});
+document.getElementById('io-export').addEventListener('click',exportJSON);
+document.getElementById('io-import-btn').addEventListener('click',()=>document.getElementById('file-import').click());
+document.getElementById('io-close').addEventListener('click',closeIOSheet);
+document.getElementById('file-import').addEventListener('change',function(){if(this.files[0]){importJSON(this.files[0]);this.value='';}});
+document.getElementById('search').addEventListener('input',function(){searchQ=this.value.trim().toLowerCase();render();});
+document.getElementById('sort-sel').addEventListener('change',render);
+document.getElementById('f-brand').addEventListener('input',updateBrandDrop);
+document.getElementById('f-brand').addEventListener('focus',updateBrandDrop);
+
+// ═══════════════════════════════════════════════════
+// PWA — Service Worker & Install Banner
+// ═══════════════════════════════════════════════════
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('./sw.js').then(reg=>{
+      console.log('SW enregistré :', reg.scope);
+    }).catch(err=>console.warn('SW échec :', err));
+  });
+}
+
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferredInstallPrompt=e;
+  document.getElementById('install-banner').classList.add('visible');
+});
+document.getElementById('install-btn').addEventListener('click',async()=>{
+  if(!deferredInstallPrompt)return;
+  deferredInstallPrompt.prompt();
+  const{outcome}=await deferredInstallPrompt.userChoice;
+  deferredInstallPrompt=null;
+  document.getElementById('install-banner').classList.remove('visible');
+  if(outcome==='accepted') showToast('App installée ! 🎉','ok');
+});
+document.getElementById('install-close').addEventListener('click',()=>{
+  document.getElementById('install-banner').classList.remove('visible');
+});
+window.addEventListener('appinstalled',()=>{
+  document.getElementById('install-banner').classList.remove('visible');
+  showToast('App installée avec succès ! 🎉','ok');
+});
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+loadData();
+render();
+</script>
+</body>
+</html>
