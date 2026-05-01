@@ -38,6 +38,8 @@ header .sub{font-size:13px;color:var(--muted);margin-top:.25rem}
 .btn-add:hover{background:var(--tea-h)}
 .btn-export{background:#fff;color:var(--tea);border:1px solid var(--border);padding:.45rem 1rem;border-radius:20px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:.35rem;transition:all .15s;white-space:nowrap}
 .btn-export:hover{border-color:var(--tea-m);background:var(--tea-l)}
+.btn-import{background:#fff;color:var(--blue);border:1px solid var(--blue-b);padding:.45rem 1rem;border-radius:20px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:.35rem;transition:all .15s;white-space:nowrap}
+.btn-import:hover{background:var(--blue-l)}
 
 /* FILTER BAR */
 .filter-bar{background:#fff;border:1px solid var(--border);border-radius:10px;padding:.75rem 1rem;margin-bottom:.75rem}
@@ -290,6 +292,10 @@ header .sub{font-size:13px;color:var(--muted);margin-top:.25rem}
     <button class="btn-export" id="btn-export">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 1v8M4 6l3 3 3-3M2 11h10"/></svg>
       Exporter JSON
+    </button>
+    <button class="btn-import" id="btn-import">
+      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 10V2M4 7l3 3 3-3M2 12h10"/></svg>
+      Importer JSON
     </button>
     <button class="btn-add" id="btn-add">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="7" y1="1" x2="7" y2="13"/><line x1="1" y1="7" x2="13" y2="7"/></svg>
@@ -548,6 +554,31 @@ window.exportJSON = () => {
   });
   a.click();
 };
+
+function importJSON(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const d = JSON.parse(e.target.result);
+      const imported = Array.isArray(d) ? d : (d.teas || []);
+      const importedTemp = d.tempOverrides || {};
+      if (!imported.length) { showToast('Aucun thé trouvé dans ce fichier.', 'err'); return; }
+      let added = 0, updated = 0;
+      imported.forEach(t => {
+        const idx = teas.findIndex(x => x.id === t.id);
+        if (idx > -1) { teas[idx] = t; updated++; }
+        else { teas.push(t); added++; }
+      });
+      Object.assign(tempOverrides, importedTemp);
+      saveData(); render();
+      showToast(added + ' ajouté' + (added > 1 ? 's' : '') + ', ' + updated + ' mis à jour.');
+    } catch(err) {
+      showToast('Fichier JSON invalide.', 'err');
+    }
+  };
+  reader.readAsText(file);
+}
 
 // ═══════════════════════════════════════════════════
 // DONNÉES PAR DÉFAUT
@@ -1224,6 +1255,8 @@ document.getElementById('filter-bar-toggle').addEventListener('click', () => {
 
 document.getElementById('btn-add').addEventListener('click', () => openModal(null));
 document.getElementById('btn-export').addEventListener('click', () => window.exportJSON());
+document.getElementById('btn-import').addEventListener('click', () => document.getElementById('file-import').click());
+document.getElementById('file-import').addEventListener('change', function() { if (this.files[0]) { importJSON(this.files[0]); this.value = ''; } });
 document.getElementById('panel-close').addEventListener('click',   closePanel);
 document.getElementById('modal-x').addEventListener('click',       closeModal);
 document.getElementById('modal-cancel').addEventListener('click',  closeModal);
@@ -1250,5 +1283,6 @@ document.addEventListener('keydown', e => {
 loadData();
 render();
 </script>
+<input type="file" id="file-import" accept=".json,application/json" style="display:none">
 </body>
 </html>
