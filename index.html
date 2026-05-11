@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Adop'thé</title>
+<title>Tea party</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -329,9 +329,9 @@ body.is-touch .act-btn svg{width:16px;height:16px}
 
 <div id="app">
   <header>
-    <div class="logo">&#9788; le meilleur outil pour faire ton thé</div>
-    <h1>Adop'thé</h1>
-    <div class="sub">Sélection de thés fins &middot; Allergènes &middot; Stocks &middot; Timer d'infusion</div>
+    <div class="logo">&#9788; the best tool for your tea shop</div>
+    <h1>Tea party</h1>
+    <div class="sub">storage &middot; allergen &middot; auto conversion &middot; Timer </div>
   </header>
 
   <div class="toolbar">
@@ -340,45 +340,45 @@ body.is-touch .act-btn svg{width:16px;height:16px}
       <input id="search" type="text" placeholder="Rechercher un thé, une marque, un arôme…">
     </div>
     <select class="sort-sel" id="sort-sel">
-      <option value="name">Trier : nom A→Z</option>
-      <option value="price-asc">Prix croissant</option>
-      <option value="price-desc">Prix décroissant</option>
-      <option value="infusion">Temps d'infusion</option>
-      <option value="brand">Par marque</option>
-      <option value="temp">Par température</option>
+      <option value="name">Sort : Name A→Z</option>
+      <option value="price-asc">By Price low => high</option>
+      <option value="price-desc">By Price high => low</option>
+      <option value="infusion">By Infusion time</option>
+      <option value="brand">By Brand</option>
+      <option value="temp">By Temperature</option>
     </select>
     <button class="btn-export" id="btn-export">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 1v8M4 6l3 3 3-3M2 11h10"/></svg>
-      Exporter JSON
+      Export JSON
     </button>
     <button class="btn-import" id="btn-import">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 10V2M4 7l3 3 3-3M2 12h10"/></svg>
-      Importer JSON
+      Import JSON
     </button>
     <input type="file" id="file-import" accept=".json" style="display:none">
 
     <button class="vessel-manager-btn" id="btn-vessels">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 2h8l-1 8H4L3 2z"/><path d="M2 2h10"/><path d="M6 5v4M8 5v4"/></svg>
-      Contenants
+      Container
     </button>
     <button class="btn-add" id="btn-add">
       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2"><line x1="7" y1="1" x2="7" y2="13"/><line x1="1" y1="7" x2="13" y2="7"/></svg>
-      Ajouter un thé
+      Add a tea
     </button>
   </div>
 
   <div class="filter-bar">
     <div class="filter-bar-top" id="filter-bar-toggle">
-      <span class="filter-bar-title">Filtres — Allergènes &amp; Marques</span>
+      <span class="filter-bar-title">Filters — Allergens &amp; Brand</span>
       <div class="filter-bar-right">
         <span class="filter-active-count" id="filter-count"></span>
         <span class="filter-arrow open" id="filter-arrow">&#9660;</span>
       </div>
     </div>
     <div class="filter-bar-body" id="filter-bar-body">
-      <div class="filter-section-lbl">Je suis allergique à</div>
+      <div class="filter-section-lbl">Im allergic to</div>
       <div class="filter-toggles" id="allergen-toggles"></div>
-      <div class="filter-section-lbl mt">Marques</div>
+      <div class="filter-section-lbl mt">Brand</div>
       <div class="filter-toggles" id="brand-toggles"></div>
     </div>
   </div>
@@ -388,7 +388,7 @@ body.is-touch .act-btn svg{width:16px;height:16px}
   <div class="grid" id="grid"></div>
   <div class="empty" id="empty" style="display:none">
     <div class="empty-icon">🍵</div>
-    <p id="empty-msg">Aucun thé trouvé.</p>
+    <p id="empty-msg">No tea found</p>
   </div>
 </div>
 
@@ -405,25 +405,25 @@ body.is-touch .act-btn svg{width:16px;height:16px}
 <div class="modal-overlay" id="modal-overlay">
   <div class="modal">
     <div class="modal-hdr">
-      <h2 id="modal-title">Nouveau thé</h2>
+      <h2 id="modal-title">New tea</h2>
       <button class="modal-x" id="modal-x">&#10005;</button>
     </div>
 
     <div class="form-row">
-      <label>Nom du thé *</label>
+      <label>Name of the tea *</label>
       <input id="f-name" type="text" placeholder="ex : Darjeeling First Flush">
     </div>
     <div class="two-col">
       <div class="form-row">
         <label>Type *</label>
         <select id="f-type">
-          <option>Thé vert</option><option>Thé noir</option><option>Thé blanc</option>
-          <option>Oolong</option><option>Pu-erh</option><option>Tisane</option>
+          <option>Green tea</option><option>Black tea</option><option>White tea</option>
+          <option>Oolong</option><option>Pu-erh</option><option>Infusion</option>
           <option>Matcha</option><option>Rooibos</option>
         </select>
       </div>
       <div class="form-row">
-        <label>Marque</label>
+        <label>Brand</label>
         <div class="brand-wrap">
           <input id="f-brand" type="text" placeholder="ex : Lipton, CFT…" autocomplete="off">
           <div class="brand-drop" id="brand-drop"></div>
@@ -431,89 +431,89 @@ body.is-touch .act-btn svg{width:16px;height:16px}
       </div>
     </div>
     <div class="form-row">
-      <label>Arômes * <small style="display:inline;text-transform:none;letter-spacing:0">(virgules)</small></label>
-      <input id="f-aromes" type="text" placeholder="ex : floral, muscat, miel">
+      <label>Aroma * <small style="display:inline;text-transform:none;letter-spacing:0">(comma)</small></label>
+      <input id="f-aromes" type="text" placeholder="ex : fruity, sweet">
     </div>
 
-    <div class="sec-sep">Température &amp; Infusion</div>
+    <div class="sec-sep">Temperature &amp; Infusion</div>
     <div class="form-row">
-      <label>Température de l'eau recommandée *</label>
+      <label>Water temperature *</label>
       <div class="temp-row">
         <input id="f-temp" type="number" min="50" max="100" step="1" placeholder="95">
         <span>°C &nbsp;(50–100)</span>
       </div>
       <div class="preset-btns" id="temp-presets"></div>
-      <small>Ajustable directement sur la fiche après enregistrement</small>
+      <small>Can be change after saving</small>
     </div>
     <div class="two-col">
       <div class="form-row">
-        <label>Infusion min (min) *</label>
+        <label>Min infusion time (minutes) *</label>
         <input id="f-imin" type="number" placeholder="2" min="0.5" step="0.5">
       </div>
       <div class="form-row">
-        <label>Infusion max (min) *</label>
+        <label>Max infusion time (minutes) *</label>
         <input id="f-imax" type="number" placeholder="3" min="0.5" step="0.5">
       </div>
     </div>
 
     <div class="form-row" style="margin-top:.2rem">
-      <label>Dosage vrac <small style="display:inline;text-transform:none;letter-spacing:0">(optionnel)</small></label>
+      <label>Loose leaf tea <small style="display:inline;text-transform:none;letter-spacing:0">(optionnal)</small></label>
       <div class="dosage-row">
         <input id="f-gpl" type="number" min="1" max="30" step="0.5" placeholder="ex : 12">
-        <span>g / litre</span>
+        <span>g / liter</span>
       </div>
-      <small>Utilisé pour calculer la dose selon le contenant sélectionné</small>
+      <small>Used to calculate the dose according to the selected container</small>
     </div>
 
-    <div class="sec-sep">Stock &amp; Disponibilité</div>
+    <div class="sec-sep">Stock &amp; Disponibility</div>
     <div class="stock-section">
-      <div class="stock-section-title">Quantités disponibles</div>
+      <div class="stock-section-title">Quantity available</div>
       <div class="stock-row">
-        <label>&#9679; Vrac</label>
+        <label>&#9679; loose leaves</label>
         <input id="f-stock-vrac" type="number" min="0" step="1" placeholder="0">
-        <span>grammes</span>
+        <span>grams</span>
         <span class="stock-indicator si-none" id="si-vrac"></span>
       </div>
       <div class="stock-row">
-        <label>&#9679; Sachets</label>
+        <label>&#9679; Tea bags</label>
         <input id="f-stock-sachets" type="number" min="0" step="1" placeholder="0">
-        <span>sachets</span>
+        <span>number of tea bags</span>
         <span class="stock-indicator si-none" id="si-sachets"></span>
       </div>
     </div>
     <div style="margin-top:.45rem">
       <small style="font-size:11px;color:var(--muted)">
-        &#9679; Vrac : <span style="color:var(--green)">vert</span> ≥ 50 g · <span style="color:var(--yellow)">jaune</span> &lt; 50 g · <span style="color:var(--red)">rouge</span> = 0 g &nbsp;|&nbsp;
-        Sachets : <span style="color:var(--green)">vert</span> ≥ 10 · <span style="color:var(--yellow)">jaune</span> &lt; 10 · <span style="color:var(--red)">rouge</span> = 0
+        &#9679; Loose leafs : <span style="color:var(--green)">green</span> ≥ 50 g · <span style="color:var(--yellow)">yellow</span> &lt; 50 g · <span style="color:var(--red)">red</span> = 0 g &nbsp;|&nbsp;
+        tea bags : <span style="color:var(--green)">green</span> ≥ 10 · <span style="color:var(--yellow)">yellow</span> &lt; 10 · <span style="color:var(--red)">red</span> = 0
       </small>
     </div>
 
-    <div class="sec-sep">Ingrédients &amp; Allergènes</div>
+    <div class="sec-sep">Ingredients &amp; Allergens</div>
     <div class="form-row">
-      <label>Ingrédients <small style="display:inline;text-transform:none;letter-spacing:0">(virgules)</small></label>
+      <label>Ingredients <small style="display:inline;text-transform:none;letter-spacing:0">(comma)</small></label>
       <input id="f-ingredients" type="text" placeholder="ex : feuilles de thé noir, bergamote">
     </div>
     <div class="form-row">
-      <label>Allergènes déclarés</label>
+      <label>Allergens</label>
       <div class="allergen-grid" id="allergen-checks"></div>
     </div>
     <div class="form-row">
-      <label>Note allergènes <small style="display:inline;text-transform:none;letter-spacing:0">(optionnel)</small></label>
+      <label>Note <small style="display:inline;text-transform:none;letter-spacing:0">(optionnal)</small></label>
       <textarea id="f-note" rows="2" placeholder="ex : Peut contenir des traces de noix."></textarea>
     </div>
 
-    <div class="sec-sep">Prix &amp; Apparence</div>
+    <div class="sec-sep">Prix &amp; Appearence</div>
     <div class="form-row">
-      <label>Prix au kilo (€) *</label>
+      <label>Price per kilo (€) *</label>
       <input id="f-price" type="number" placeholder="45" min="0" step="0.5">
     </div>
     <div class="form-row">
-      <label>Couleur de la carte</label>
+      <label>card color</label>
       <div class="color-picker" id="color-picker"></div>
     </div>
     <div class="modal-foot">
-      <button class="btn-cancel" id="modal-cancel">Annuler</button>
-      <button class="btn-save" id="modal-save">Enregistrer</button>
+      <button class="btn-cancel" id="modal-cancel">Cancel</button>
+      <button class="btn-save" id="modal-save">Save</button>
     </div>
   </div>
 </div>
@@ -522,22 +522,22 @@ body.is-touch .act-btn svg{width:16px;height:16px}
 <div class="vessel-modal-overlay" id="vessel-modal-overlay">
   <div class="vessel-modal">
     <div class="vessel-modal-hdr">
-      <h2>🫙 Mes contenants</h2>
+      <h2>🫙 My containers</h2>
       <button class="modal-x" id="vessel-modal-x">&#10005;</button>
     </div>
     <div class="vessel-list" id="vessel-list"></div>
     <div class="vessel-add-form">
-      <div class="vessel-add-form-title">Ajouter un contenant</div>
+      <div class="vessel-add-form-title">add a container</div>
       <div class="vessel-add-row">
         <div class="vf" style="flex:2">
-          <label>Nom</label>
+          <label>name</label>
           <input id="v-name" type="text" placeholder="ex : Mon thermos">
         </div>
         <div class="vf" style="flex:1">
-          <label>Capacité (mL)</label>
+          <label>Capacity (mL)</label>
           <input id="v-cap" type="number" min="1" step="1" placeholder="750">
         </div>
-        <button class="vessel-add-btn" id="vessel-add-btn">Ajouter</button>
+        <button class="vessel-add-btn" id="vessel-add-btn">Add</button>
       </div>
     </div>
   </div>
@@ -546,11 +546,11 @@ body.is-touch .act-btn svg{width:16px;height:16px}
 <!-- CONFIRM DELETE -->
 <div class="confirm-overlay" id="confirm-overlay">
   <div class="confirm-box">
-    <h3>Supprimer ce thé ?</h3>
-    <p id="confirm-msg">Cette action est irréversible.</p>
+    <h3>Delete this tea ?</h3>
+    <p id="confirm-msg">You'll have to do the whole thing from zero</p>
     <div class="confirm-btns">
-      <button class="btn-no" id="confirm-no">Annuler</button>
-      <button class="btn-del" id="confirm-yes">Supprimer</button>
+      <button class="btn-no" id="confirm-no">Cancel</button>
+      <button class="btn-del" id="confirm-yes">Delete</button>
     </div>
   </div>
 </div>
@@ -578,18 +578,18 @@ let bellEnabled = true;
 // Roue des couleurs : 12 teintes × 5 luminosités
 const COLOR_WHEEL = (function() {
   const hues = [
-    {h:0,   name:'Rouge'},
+    {h:0,   name:'Red'},
     {h:25,  name:'Orange'},
-    {h:45,  name:'Or'},
-    {h:60,  name:'Jaune'},
-    {h:90,  name:'Vert clair'},
-    {h:130, name:'Vert'},
+    {h:45,  name:'Gold'},
+    {h:60,  name:'Yellow'},
+    {h:90,  name:'Light green'},
+    {h:130, name:'Green'},
     {h:175, name:'Turquoise'},
-    {h:205, name:'Bleu clair'},
-    {h:240, name:'Bleu'},
+    {h:205, name:'Light blue'},
+    {h:240, name:'Blue'},
     {h:260, name:'Indigo'},
-    {h:285, name:'Violet'},
-    {h:330, name:'Rose'},
+    {h:285, name:'Purple'},
+    {h:330, name:'Pink'},
   ];
   const shadeParams = [
     {l:25, s:75},
@@ -614,24 +614,24 @@ const COLORS = COLOR_WHEEL.map(col=>col.shades[1]);
 
 const ALLERGENS = [
   {id:'gluten',       label:'Gluten'},
-  {id:'lait',         label:'Lait'},
-  {id:'oeufs',        label:'Œufs'},
-  {id:'fruits_coque', label:'Fruits à coque'},
-  {id:'arachides',    label:'Arachides'},
-  {id:'soja',         label:'Soja'},
-  {id:'sesame',       label:'Sésame'},
+  {id:'milk',         label:'Milk'},
+  {id:'egg',          label:'Eggs'},
+  {id:'nut',          label:'Nut'},
+  {id:'peanut',    label:'Peanut'},
+  {id:'soy',         label:'Soy'},
+  {id:'sesame',       label:'Sesame'},
   {id:'sulfites',     label:'Sulfites'},
-  {id:'lupin',        label:'Lupin'},
-  {id:'celeri',       label:'Céleri'},
-  {id:'moutarde',     label:'Moutarde'},
+  {id:'lupine',        label:'Lupine'},
+  {id:'celeri',       label:'Celeri'},
+  {id:'mustard',     label:'Mustard'},
 ];
 
 const TEMP_PRESETS = [
-  {label:'Thé vert',         temp:75},
-  {label:'Blanc / Matcha',   temp:72},
+  {label:'Green tea',         temp:75},
+  {label:'White / Matcha',   temp:72},
   {label:'Oolong',           temp:87},
-  {label:'Thé noir',         temp:97},
-  {label:'Tisane / Rooibos', temp:98},
+  {label:'Black tea',         temp:97},
+  {label:'Infusion / Rooibos', temp:98},
 ];
 
 const DEFAULT_BRANDS = [
@@ -718,7 +718,7 @@ function importJSON(file) {
       const d = JSON.parse(e.target.result);
       const imported = Array.isArray(d) ? d : (d.teas || []);
       const importedTemp = d.tempOverrides || {};
-      if (!imported.length) { showToast('Aucun thé trouvé dans ce fichier.', 'err'); return; }
+      if (!imported.length) { showToast('No tea in this file', 'err'); return; }
       let added = 0, updated = 0;
       imported.forEach(t => {
         const idx = teas.findIndex(x => x.id === t.id);
@@ -745,30 +745,14 @@ function importJSON(file) {
 // ═══════════════════════════════════════════════════
 function defaultTeas() {
   return [
-    {id:1,name:'Darjeeling First Flush',type:'Thé noir',brand:'Mariage Frères',
-     aromes:['muscat','floral','fruité'],ingredients:['feuilles de thé noir Darjeeling','bergamote naturelle'],
+    {id:1,name:'Darjeeling First Flush',type:'Black tea',brand:'Mariage Frères',
+     aromes:['floral','fruity'],ingredients:['Black tea'],
      allergens:[],allergyNote:'',infusionMin:2,infusionMax:3,price:85,temp:97,color:COLORS[7],
      stockVrac:120, stockSachets:25},
-    {id:2,name:'Gyokuro',type:'Thé vert',brand:'Palais des Thés',
-     aromes:['umami','herbe','doux'],ingredients:['feuilles de thé vert Gyokuro'],
+    {id:2,name:'Gyokuro',type:'Green tea',brand:'Palais des Thés',
+     aromes:['umami','herbe','doux'],ingredients:['Gyokuro green tea'],
      allergens:[],allergyNote:'',infusionMin:1.5,infusionMax:2,price:120,temp:72,color:COLORS[0],
      stockVrac:35, stockSachets:0},
-    {id:3,name:'Chai Épicé',type:'Tisane',brand:'Lipton',
-     aromes:['cannelle','gingembre','cardamome'],ingredients:['thé noir Assam','lait en poudre','cannelle','gingembre','cardamome'],
-     allergens:['lait'],allergyNote:'Contient du lait en poudre.',infusionMin:4,infusionMax:6,price:45,temp:98,color:COLORS[2],
-     stockVrac:0, stockSachets:7},
-    {id:4,name:'Matcha Cérémoniel',type:'Matcha',brand:'CFT',
-     aromes:['végétal','umami','doux'],ingredients:['poudre de thé Matcha'],
-     allergens:['gluten'],allergyNote:'Conditionné dans un atelier manipulant du gluten.',infusionMin:1,infusionMax:2,price:150,temp:72,color:COLORS[0],
-     stockVrac:80, stockSachets:0},
-    {id:5,name:'Silver Needle',type:'Thé blanc',brand:'Dammann',
-     aromes:['miel','melon','fleuri'],ingredients:['bourgeons Bai Hao Yin Zhen'],
-     allergens:[],allergyNote:'',infusionMin:3,infusionMax:5,price:95,temp:70,color:COLORS[3],
-     stockVrac:60, stockSachets:15},
-    {id:6,name:'Rooibos Vanille',type:'Rooibos',brand:'Lipton',
-     aromes:['vanille','caramel','boisé'],ingredients:['rooibos rouge','extrait de vanille','morceaux de vanille'],
-     allergens:[],allergyNote:'Peut contenir traces de fruits à coque.',infusionMin:5,infusionMax:7,price:35,temp:98,color:COLORS[4],
-     stockVrac:0, stockSachets:0},
   ];
 }
 
@@ -795,11 +779,11 @@ function calcDose(capacityMl, gramsPerLiter) {
 function vesselIcon(name) {
   const n = (name||'').toLowerCase();
   if (n.includes('thermos'))  return '🧳';
-  if (n.includes('théière') || n.includes('theiere')) return '🫖';
+  if (n.includes('tea pot') || n.includes('tea pot')) return '🫖';
   if (n.includes('mug'))      return '☕';
-  if (n.includes('tasse'))    return '🍵';
-  if (n.includes('gourde'))   return '💧';
-  if (n.includes('bouteille'))return '🍶';
+  if (n.includes('cup'))    return '🍵';
+  if (n.includes('small bottle'))   return '💧';
+  if (n.includes('medium bottle'))return '🍶';
   return '🫙';
 }
 
